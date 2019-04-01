@@ -17,9 +17,12 @@
     let canvas = document.getElementById("canvas"),
         ctx = canvas.getContext("2d"),
         elements = [],
-        elementsCount = 6,
+        elementsCount = 8,
         iteration = 0,
-        lastRender;
+        offsetX = 0,
+        offsetY = 0,
+        lastRender,
+        img = document.getElementById('img');
 
     function getRandomInt(min, max) {
         min = Math.ceil(min);
@@ -28,12 +31,19 @@
     }
 
     function initElements() {
-        for (let i = 0; i < elementsCount; i++) {
+        let x, i;
+        for (i = 0; i < elementsCount; i++) {
+            if (i % 2 === 0) {
+                x = getRandomInt(0, 200);
+            } else {
+                x = getRandomInt(canvas.width / 2, canvas.width / 2 + 200);
+            }
             elements.push([
-                getRandomInt(0, canvas.width / 2),
+                x,
                 getRandomInt(0, canvas.height),
-                getRandomInt(canvas.width / 3, canvas.width),
-                200
+                canvas.width / 2 - 80,
+                200,
+                getRandomInt(0, 100)
             ]);
         }
     }
@@ -61,21 +71,20 @@
             //     elements[i][2],
             //     elements[i][3],
             // );
-            let img = document.getElementById('img');
             ctx.drawImage(
                 img,
-                img.width / 2,
-                img.height / 2,
+                img.width / 2 - (offsetX / 100 * elements[i][4]),
+                img.height / 2 - (offsetY / 100 * elements[i][4]),
                 elements[i][2],
                 elements[i][3],
-                elements[i][0],
-                elements[i][1] + iteration,
+                elements[i][0] + (offsetX / 2 / 100 * elements[i][4]),
+                elements[i][1] + iteration + (offsetY / 2 / 100 * elements[i][4]),
                 elements[i][2],
                 elements[i][3]
             );
 
-            if (elements[i][1] + iteration > canvas.height) {
-                elements[i][1] = -elements[i][3] - iteration;
+            if (elements[i][1] + iteration + (offsetY / 2 / 100 * elements[i][4]) > canvas.height) {
+                elements[i][1] = -elements[i][3] - iteration - (offsetY / 2 / 100 * elements[i][4]);
             }
         }
 
@@ -90,7 +99,9 @@
         let posx, posy, pos = getMousePos(canvas, e);
         posx = pos.x;
         posy = pos.y;
-        console.log(posx);
+
+        offsetX = posx / 5;
+        offsetY = posy / 5;
     }
 
     // window.addEventListener('mousemove', mouseMove, false);
