@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+    <style>
+        html, body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<img src="wolf-owl-bird-lake-forest-winter-snow.jpg" id="img" style="display: none;"/>
+<canvas style="border:1px solid #000000;margin:0;padding:0;position:relative;" id="canvas"
+        width="100vw" height="100vh"></canvas>
+
+
+<script>
+    let canvas = document.getElementById("canvas"),
+        ctx = canvas.getContext("2d"),
+        elements = [],
+        elementsCount = 6,
+        iteration = 0,
+        lastRender;
+
+    function getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function initElements() {
+        for (let i = 0; i < elementsCount; i++) {
+            elements.push([
+                getRandomInt(0, canvas.width / 2),
+                getRandomInt(0, canvas.height),
+                getRandomInt(canvas.width / 3, canvas.width),
+                200
+            ]);
+        }
+    }
+
+    function init() {
+        ctx.canvas.width = window.innerWidth;
+        ctx.canvas.height = window.innerHeight;
+        ctx.save();
+        initElements();
+        window.addEventListener('mousemove', mouseMove, false);
+        lastRender = new Date();
+        window.requestAnimationFrame(draw);
+    }
+
+    function draw() {
+
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < elements.length; i++) {
+            ctx.fillStyle = 'black';
+            // ctx.fillRect(
+            //     elements[i][0],
+            //     elements[i][1] + iteration,
+            //     elements[i][2],
+            //     elements[i][3],
+            // );
+            let img = document.getElementById('img');
+            ctx.drawImage(
+                img,
+                img.width / 2,
+                img.height / 2,
+                elements[i][2],
+                elements[i][3],
+                elements[i][0],
+                elements[i][1] + iteration,
+                elements[i][2],
+                elements[i][3]
+            );
+
+            if (elements[i][1] + iteration > canvas.height) {
+                elements[i][1] = -elements[i][3] - iteration;
+            }
+        }
+
+
+        iteration++;
+        window.requestAnimationFrame(draw);
+
+    }
+
+
+    function mouseMove(e) {
+        let posx, posy, pos = getMousePos(canvas, e);
+        posx = pos.x;
+        posy = pos.y;
+        console.log(posx);
+    }
+
+    // window.addEventListener('mousemove', mouseMove, false);
+
+    function getMousePos(canvas, evt) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+            x: (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
+            y: (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
+        };
+    }
+
+    init();
+</script>
+</body>
+</html>
