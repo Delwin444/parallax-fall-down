@@ -64,13 +64,6 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         for (let i = 0; i < elements.length; i++) {
-            ctx.fillStyle = 'black';
-            // ctx.fillRect(
-            //     elements[i][0],
-            //     elements[i][1] + iteration,
-            //     elements[i][2],
-            //     elements[i][3],
-            // );
             ctx.drawImage(
                 img,
                 img.width / 2 - (offsetX / 100 * elements[i][4]),
