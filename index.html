@@ -19,9 +19,21 @@
             padding: 20px;
             border-top-left-radius: 20px;
         }
+
+        #fps {
+            position: absolute;
+            top: 0;
+            right: 0;
+            color: greenyellow;
+            background-color: #000;
+            padding: 20px;
+            font-size: 24px;
+            z-index: 2;
+        }
     </style>
 </head>
 <body>
+<div id="fps"></div>
 <form>
     <fieldset>
         <div>
@@ -162,7 +174,11 @@
     }
 
     function draw() {
-        let currentElement, currentElementXOffset, currentElementYOffset, i;
+        let currentElement, currentElementXOffset, currentElementYOffset, i, thisFrameTime;
+
+        thisFrameTime = (thisLoop = new Date) - lastLoop;
+        frameTime += (thisFrameTime - frameTime) / filterStrength;
+        lastLoop = thisLoop;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -210,6 +226,17 @@
             y: (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
         };
     }
+
+    /**
+     * https://stackoverflow.com/a/5111475
+     */
+    let filterStrength = 20,
+        frameTime = 0, lastLoop = new Date, thisLoop,
+        fpsOut = document.getElementById('fps');
+
+    setInterval(function () {
+        fpsOut.innerHTML = (1000 / frameTime).toFixed(1) + " fps";
+    }, 1000);
 
     init();
 </script>
