@@ -8,6 +8,12 @@
     </style>
 </head>
 <body>
+<form style="background: #fff; z-index: 2; position: absolute; right: 0; bottom: 0; padding: 20px;">
+    <fieldset>
+        <label for="dropDownSpeed">Drop down speed factor: <span id="currentDropDownSpeed"></span></label>
+        <input id="dropDownSpeed" type="range" name="dropDownSpeed" min="0" max="10" value="1" step="any">
+    </fieldset>
+</form>
 <img src="owl-2320703_1920.jpg" id="img" style="display: none;"/>
 <canvas style="border:1px solid #000000;margin:0;padding:0;position:relative;" id="canvas"
         width="100vw" height="100vh"></canvas>
@@ -22,7 +28,19 @@
         offsetX = 0,
         offsetY = 0,
         lastRender,
+        dropDownSpeed = 1,
+        dropDownSlider = document.querySelector('input[name="dropDownSpeed"]'),
+        currentDropDownSpeedElement = document.getElementById('currentDropDownSpeed'),
         img = document.getElementById('img');
+
+    dropDownSlider.oninput = function () {
+        dropDownSpeed = parseFloat(this.value);
+        updateCurrentDropDownSpeedElement();
+    };
+
+    function updateCurrentDropDownSpeedElement() {
+        currentDropDownSpeedElement.innerHTML = dropDownSpeed.toFixed(2);
+    }
 
     function getRandomInt(min, max) {
         min = Math.ceil(min);
@@ -38,13 +56,13 @@
             } else {
                 x = getRandomInt(canvas.width / 2, canvas.width / 2 + 200);
             }
-            elements.push([
-                x,
-                getRandomInt(0, canvas.height),
-                canvas.width / 2 - 80,
-                200,
-                getRandomInt(0, 100)
-            ]);
+            elements.push({
+                x: x,
+                y: getRandomInt(0, canvas.height),
+                width: canvas.width / 2 - 80,
+                height: 200,
+                effectFactor: getRandomInt(0, 100)
+            });
         }
     }
 
@@ -53,31 +71,37 @@
         ctx.canvas.height = window.innerHeight;
         ctx.save();
         initElements();
-        window.addEventListener('mousemove', mouseMove, false);
+        updateCurrentDropDownSpeedElement();
+        window.addEventListener('mousemove', offsetUpdate, false);
+        window.addEventListener('mouseenter', offsetUpdate, false);
         lastRender = new Date();
         window.requestAnimationFrame(draw);
     }
 
     function draw() {
-
+        let currentElement, i;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        for (let i = 0; i < elements.length; i++) {
+        for (i = 0; i < elements.length; i++) {
+            currentElement = elements[i];
+
+            currentElement.y += dropDownSpeed;
+
             ctx.drawImage(
                 img,
-                img.width / 2 - (offsetX / 100 * elements[i][4]),
-                img.height / 2 - (offsetY / 100 * elements[i][4]),
-                elements[i][2],
-                elements[i][3],
-                elements[i][0] + (offsetX / 2 / 100 * elements[i][4]),
-                elements[i][1] + iteration + (offsetY / 2 / 100 * elements[i][4]),
-                elements[i][2],
-                elements[i][3]
+                img.width / 2 - (offsetX / 100 * currentElement.effectFactor),
+                img.height / 2 - (offsetY / 100 * currentElement.effectFactor),
+                currentElement.width,
+                currentElement.height,
+                currentElement.x + (offsetX / 2 / 100 * currentElement.effectFactor),
+                currentElement.y,
+                currentElement.width,
+                currentElement.height
             );
 
-            if (elements[i][1] + iteration + (offsetY / 2 / 100 * elements[i][4]) > canvas.height) {
-                elements[i][1] = -elements[i][3] - iteration - (offsetY / 2 / 100 * elements[i][4]);
+            if (currentElement.y > canvas.height) {
+                currentElement.y = -currentElement.height - (offsetY / 2 / 100 * currentElement.effectFactor);
             }
         }
 
@@ -87,8 +111,7 @@
 
     }
 
-
-    function mouseMove(e) {
+    function offsetUpdate(e) {
         let posx, posy, pos = getMousePos(canvas, e);
         posx = pos.x;
         posy = pos.y;
@@ -96,8 +119,6 @@
         offsetX = posx / 5;
         offsetY = posy / 5;
     }
-
-    // window.addEventListener('mousemove', mouseMove, false);
 
     function getMousePos(canvas, evt) {
         var rect = canvas.getBoundingClientRect();
