@@ -5,13 +5,23 @@
         html, body {
             margin: 0;
         }
+
+        input[type="range"] {
+            display: block;
+        }
     </style>
 </head>
 <body>
 <form style="background: #fff; z-index: 2; position: absolute; right: 0; bottom: 0; padding: 20px;">
     <fieldset>
-        <label for="dropDownSpeed">Drop down speed factor: <span id="currentDropDownSpeed"></span></label>
-        <input id="dropDownSpeed" type="range" name="dropDownSpeed" min="0" max="10" value="1" step="any">
+        <div>
+            <label for="elementsCount">Drop down speed factor: <span id="currentElementsCount"></span></label>
+            <input id="elementsCount" type="range" name="elementsCount" min="0" max="50" value="8" step="1">
+        </div>
+        <div>
+            <label for="dropDownSpeed">Drop down speed factor: <span id="currentDropDownSpeed"></span></label>
+            <input id="dropDownSpeed" type="range" name="dropDownSpeed" min="0" max="10" value="1" step="any">
+        </div>
     </fieldset>
 </form>
 <img src="owl-2320703_1920.jpg" id="img" style="display: none;"/>
@@ -24,22 +34,46 @@
         ctx = canvas.getContext("2d"),
         elements = [],
         elementsCount = 8,
+        elementsCountSlider = document.getElementById('elementsCount'),
+        currentElementsCountElement = document.getElementById('currentElementsCount'),
         iteration = 0,
         offsetX = 0,
         offsetY = 0,
         lastRender,
-        dropDownSpeed = 1,
-        dropDownSlider = document.querySelector('input[name="dropDownSpeed"]'),
+        dropDownSpeed = 1.0,
+        dropDownSlider = document.getElementById('dropDownSpeed'),
         currentDropDownSpeedElement = document.getElementById('currentDropDownSpeed'),
         img = document.getElementById('img');
 
     dropDownSlider.oninput = function () {
         dropDownSpeed = parseFloat(this.value);
+        localStorage.setItem('dropDownSpeed', dropDownSpeed);
         updateCurrentDropDownSpeedElement();
     };
 
     function updateCurrentDropDownSpeedElement() {
         currentDropDownSpeedElement.innerHTML = dropDownSpeed.toFixed(2);
+    }
+
+    elementsCountSlider.oninput = function () {
+        let intValue = parseInt(this.value, 10);
+
+        elementsCount = intValue;
+        localStorage.setItem('elementsCount', elementsCount);
+
+        if (intValue < elements.length) {
+            elements.splice(-(elements.length - intValue));
+        }
+
+        while (intValue > elements.length) {
+            elements.push(createNewElement());
+        }
+
+        updateCurrentElementsCountElement();
+    };
+
+    function updateCurrentElementsCountElement() {
+        currentElementsCountElement.innerHTML = elementsCount.toString();
     }
 
     function getRandomInt(min, max) {
@@ -48,30 +82,46 @@
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    function initElements() {
-        let x, i;
-        for (i = 0; i < elementsCount; i++) {
-            if (i % 2 === 0) {
-                x = getRandomInt(0, 200);
-            } else {
-                x = getRandomInt(canvas.width / 2, canvas.width / 2 + 200);
-            }
-            elements.push({
-                x: x,
-                y: getRandomInt(0, canvas.height),
-                width: canvas.width / 2 - 80,
-                height: 200,
-                effectFactor: getRandomInt(0, 100)
-            });
+    function createNewElement() {
+        let x;
+
+        if (elements.length % 2 === 0) {
+            x = getRandomInt(0, 200);
+        } else {
+            x = getRandomInt(canvas.width / 2, canvas.width / 2 + 200);
         }
+
+        return {
+            x: x,
+            y: getRandomInt(0, canvas.height),
+            width: canvas.width / 2 - 80,
+            height: 200,
+            effectFactor: getRandomInt(0, 100)
+        }
+    }
+
+    function initElements() {
+        for (let i = 0; i < elementsCount; i++) {
+            elements.push(createNewElement());
+        }
+    }
+
+    function initFormData() {
+        dropDownSpeed = parseFloat(localStorage.getItem('dropDownSpeed')) || dropDownSpeed;
+        dropDownSlider.value = dropDownSpeed;
+        updateCurrentDropDownSpeedElement();
+
+        elementsCount = parseFloat(localStorage.getItem('elementsCount') || elementsCount);
+        elementsCountSlider.value = elementsCount;
+        updateCurrentElementsCountElement();
     }
 
     function init() {
         ctx.canvas.width = window.innerWidth;
         ctx.canvas.height = window.innerHeight;
         ctx.save();
+        initFormData();
         initElements();
-        updateCurrentDropDownSpeedElement();
         window.addEventListener('mousemove', offsetUpdate, false);
         window.addEventListener('mouseenter', offsetUpdate, false);
         lastRender = new Date();
@@ -112,16 +162,14 @@
     }
 
     function offsetUpdate(e) {
-        let posx, posy, pos = getMousePos(canvas, e);
-        posx = pos.x;
-        posy = pos.y;
+        let pos = getMousePos(canvas, e);
 
-        offsetX = posx / 5;
-        offsetY = posy / 5;
+        offsetX = pos.x / 5;
+        offsetY = pos.y / 5;
     }
 
     function getMousePos(canvas, evt) {
-        var rect = canvas.getBoundingClientRect();
+        let rect = canvas.getBoundingClientRect();
         return {
             x: (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
             y: (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
