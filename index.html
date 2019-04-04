@@ -9,18 +9,34 @@
         input[type="range"] {
             display: block;
         }
+
+        form {
+            background: #fff;
+            z-index: 2;
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            padding: 20px;
+            border-top-left-radius: 20px;
+        }
     </style>
 </head>
 <body>
-<form style="background: #fff; z-index: 2; position: absolute; right: 0; bottom: 0; padding: 20px;">
+<form>
     <fieldset>
         <div>
-            <label for="elementsCount">Drop down speed factor: <span id="currentElementsCount"></span></label>
+            <label for="elementsCount">Number of Elements: <span id="currentElementsCount"></span></label>
             <input id="elementsCount" type="range" name="elementsCount" min="0" max="50" value="8" step="1">
         </div>
         <div>
             <label for="dropDownSpeed">Drop down speed factor: <span id="currentDropDownSpeed"></span></label>
             <input id="dropDownSpeed" type="range" name="dropDownSpeed" min="0" max="10" value="1" step="any">
+        </div>
+        <div>
+            <label for="parallaxEffectFactor">Parallax effect factor: <span
+                    id="currentParallaxEffectFactor"></span></label>
+            <input id="parallaxEffectFactor" type="range" name="parallaxEffectFactor" min="0" max="5" value="1"
+                   step="any">
         </div>
     </fieldset>
 </form>
@@ -43,6 +59,9 @@
         dropDownSpeed = 1.0,
         dropDownSlider = document.getElementById('dropDownSpeed'),
         currentDropDownSpeedElement = document.getElementById('currentDropDownSpeed'),
+        parallaxEffectFactor = 1,
+        parallaxEffectFactorSlider = document.getElementById('parallaxEffectFactor'),
+        currentParallaxEffectFactorElement = document.getElementById('currentParallaxEffectFactor'),
         img = document.getElementById('img');
 
     dropDownSlider.oninput = function () {
@@ -74,6 +93,16 @@
 
     function updateCurrentElementsCountElement() {
         currentElementsCountElement.innerHTML = elementsCount.toString();
+    }
+
+    parallaxEffectFactorSlider.oninput = function () {
+        parallaxEffectFactor = parseFloat(this.value);
+        localStorage.setItem('parallaxEffectFactor', parallaxEffectFactor);
+        updateCurrentParallaxEffectFactorElement();
+    };
+
+    function updateCurrentParallaxEffectFactorElement() {
+        currentParallaxEffectFactorElement.innerHTML = parallaxEffectFactor.toFixed(2);
     }
 
     function getRandomInt(min, max) {
@@ -114,6 +143,10 @@
         elementsCount = parseFloat(localStorage.getItem('elementsCount') || elementsCount);
         elementsCountSlider.value = elementsCount;
         updateCurrentElementsCountElement();
+
+        parallaxEffectFactor = parseFloat(localStorage.getItem('parallaxEffectFactor') || parallaxEffectFactor);
+        parallaxEffectFactorSlider.value = parallaxEffectFactor;
+        updateCurrentParallaxEffectFactorElement();
     }
 
     function init() {
@@ -129,29 +162,31 @@
     }
 
     function draw() {
-        let currentElement, i;
+        let currentElement, currentElementXOffset, currentElementYOffset, i;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         for (i = 0; i < elements.length; i++) {
             currentElement = elements[i];
+            currentElementXOffset = offsetX / 100 * currentElement.effectFactor * parallaxEffectFactor;
+            currentElementYOffset = offsetY / 100 * currentElement.effectFactor * parallaxEffectFactor;
 
             currentElement.y += dropDownSpeed;
 
             ctx.drawImage(
                 img,
-                img.width / 2 - (offsetX / 100 * currentElement.effectFactor),
-                img.height / 2 - (offsetY / 100 * currentElement.effectFactor),
+                img.width / 2 - currentElementXOffset,
+                img.height / 2 - currentElementYOffset,
                 currentElement.width,
                 currentElement.height,
-                currentElement.x + (offsetX / 2 / 100 * currentElement.effectFactor),
-                currentElement.y,
+                currentElement.x + currentElementXOffset / 2,
+                currentElement.y + currentElementYOffset / 2,
                 currentElement.width,
                 currentElement.height
             );
 
-            if (currentElement.y > canvas.height) {
-                currentElement.y = -currentElement.height - (offsetY / 2 / 100 * currentElement.effectFactor);
+            if (currentElement.y + currentElementYOffset / 2 > canvas.height) {
+                currentElement.y = -currentElement.height - currentElementYOffset / 2;
             }
         }
 
