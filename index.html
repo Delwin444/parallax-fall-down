@@ -148,15 +148,23 @@
     }
 
     function initFormData() {
-        dropDownSpeed = parseFloat(localStorage.getItem('dropDownSpeed')) || dropDownSpeed;
+        dropDownSpeed = localStorage.getItem('dropDownSpeed') === null
+            ? dropDownSpeed
+            : parseFloat(localStorage.getItem('dropDownSpeed'));
+
         dropDownSlider.value = dropDownSpeed;
         updateCurrentDropDownSpeedElement();
 
-        elementsCount = parseFloat(localStorage.getItem('elementsCount') || elementsCount);
+        elementsCount = localStorage.getItem('elementsCount') === null
+            ? elementsCount
+            : parseInt(localStorage.getItem('elementsCount'), 10);
+
         elementsCountSlider.value = elementsCount;
         updateCurrentElementsCountElement();
 
-        parallaxEffectFactor = parseFloat(localStorage.getItem('parallaxEffectFactor') || parallaxEffectFactor);
+        parallaxEffectFactor = localStorage.getItem('parallaxEffectFactor') === null
+            ? parallaxEffectFactor
+            : parseFloat(localStorage.getItem('parallaxEffectFactor'));
         parallaxEffectFactorSlider.value = parallaxEffectFactor;
         updateCurrentParallaxEffectFactorElement();
     }
