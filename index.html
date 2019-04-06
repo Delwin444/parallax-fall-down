@@ -30,6 +30,17 @@
             font-size: 24px;
             z-index: 2;
         }
+
+        canvas {
+            border: 1px solid #000000;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+
+        #img {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -52,40 +63,55 @@
         </div>
     </fieldset>
 </form>
-<img src="owl-2320703_1920.jpg" id="img" style="display: none;"/>
-<canvas style="border:1px solid #000000;margin:0;padding:0;position:relative;" id="canvas"
-        width="100vw" height="100vh"></canvas>
+<img src="owl-2320703_1920.jpg" id="img"/>
+<canvas id="canvas"></canvas>
 
 
 <script>
-    let canvas = document.getElementById("canvas"),
-        ctx = canvas.getContext("2d"),
+    let lastRender,
+
+        // Set default values.
         elements = [],
         elementsCount = 8,
-        elementsCountSlider = document.getElementById('elementsCount'),
-        currentElementsCountElement = document.getElementById('currentElementsCount'),
-        iteration = 0,
         offsetX = 0,
         offsetY = 0,
-        lastRender,
         dropDownSpeed = 1.0,
+        parallaxEffectFactor = 1,
+
+        // Query necessary elements.
+        canvas = document.getElementById("canvas"),
+        ctx = canvas.getContext("2d"),
+        elementsCountSlider = document.getElementById('elementsCount'),
+        currentElementsCountElement = document.getElementById('currentElementsCount'),
         dropDownSlider = document.getElementById('dropDownSpeed'),
         currentDropDownSpeedElement = document.getElementById('currentDropDownSpeed'),
-        parallaxEffectFactor = 1,
         parallaxEffectFactorSlider = document.getElementById('parallaxEffectFactor'),
         currentParallaxEffectFactorElement = document.getElementById('currentParallaxEffectFactor'),
         img = document.getElementById('img');
 
+    /*
+     * START event and update functions for UI input fields.
+     */
+
+    /**
+     * Add dropDownSlider event listener and update dropDownSpeed.
+     */
     dropDownSlider.oninput = function () {
         dropDownSpeed = parseFloat(this.value);
         localStorage.setItem('dropDownSpeed', dropDownSpeed);
         updateCurrentDropDownSpeedElement();
     };
 
+    /**
+     * Update drop down speed in UI.
+     */
     function updateCurrentDropDownSpeedElement() {
         currentDropDownSpeedElement.innerHTML = dropDownSpeed.toFixed(2);
     }
 
+    /**
+     * Add elementsCountSlider event listener and update elements count.
+     */
     elementsCountSlider.oninput = function () {
         let intValue = parseInt(this.value, 10);
 
@@ -103,26 +129,47 @@
         updateCurrentElementsCountElement();
     };
 
+    /**
+     * Update elements count in UI.
+     */
     function updateCurrentElementsCountElement() {
         currentElementsCountElement.innerHTML = elementsCount.toString();
     }
 
+    /**
+     * Add parallaxEffectFactorSlider event listener and update parallaxEffectFactor.
+     */
     parallaxEffectFactorSlider.oninput = function () {
         parallaxEffectFactor = parseFloat(this.value);
         localStorage.setItem('parallaxEffectFactor', parallaxEffectFactor);
         updateCurrentParallaxEffectFactorElement();
     };
 
+    /**
+     * Update parallax effect fector in UI.
+     */
     function updateCurrentParallaxEffectFactorElement() {
         currentParallaxEffectFactorElement.innerHTML = parallaxEffectFactor.toFixed(2);
     }
 
+    /*
+     * END event and update functions for UI input fields.
+     */
+
+    /**
+     * Get random integer between to values.
+     * min and max as return possible.
+     */
     function getRandomInt(min, max) {
         min = Math.ceil(min);
         max = Math.floor(max);
+
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    /**
+     * Create new parallax fall down element.
+     */
     function createNewElement() {
         let x;
 
@@ -141,13 +188,22 @@
         }
     }
 
+    /**
+     * Initial creation of parallax fall down elements.
+     */
     function initElements() {
         for (let i = 0; i < elementsCount; i++) {
             elements.push(createNewElement());
         }
     }
 
+    /**
+     * Initial loading of persisted data, if not available, use default values.
+     */
     function initFormData() {
+        /*
+         * Update drop down speed.
+         */
         dropDownSpeed = localStorage.getItem('dropDownSpeed') === null
             ? dropDownSpeed
             : parseFloat(localStorage.getItem('dropDownSpeed'));
@@ -155,6 +211,9 @@
         dropDownSlider.value = dropDownSpeed;
         updateCurrentDropDownSpeedElement();
 
+        /*
+         * Update elements count.
+         */
         elementsCount = localStorage.getItem('elementsCount') === null
             ? elementsCount
             : parseInt(localStorage.getItem('elementsCount'), 10);
@@ -162,25 +221,39 @@
         elementsCountSlider.value = elementsCount;
         updateCurrentElementsCountElement();
 
+        /*
+         * Update parallax effect.
+         */
         parallaxEffectFactor = localStorage.getItem('parallaxEffectFactor') === null
             ? parallaxEffectFactor
             : parseFloat(localStorage.getItem('parallaxEffectFactor'));
+
         parallaxEffectFactorSlider.value = parallaxEffectFactor;
         updateCurrentParallaxEffectFactorElement();
     }
 
+    /**
+     * Main initialize function.
+     */
     function init() {
         ctx.canvas.width = window.innerWidth;
         ctx.canvas.height = window.innerHeight;
-        ctx.save();
+        lastRender = new Date();
+
+        ctx.save(); // @TODO Might not be necessary, investigation needed.
+
         initFormData();
         initElements();
+
         window.addEventListener('mousemove', offsetUpdate, false);
         window.addEventListener('mouseenter', offsetUpdate, false);
-        lastRender = new Date();
+
         window.requestAnimationFrame(draw);
     }
 
+    /**
+     * Main draw loop.
+     */
     function draw() {
         let currentElement, currentElementXOffset, currentElementYOffset, i, thisFrameTime;
 
@@ -190,13 +263,18 @@
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        /*
+         * Loop every element and draw image in canvas.
+         */
         for (i = 0; i < elements.length; i++) {
             currentElement = elements[i];
             currentElementXOffset = offsetX / 100 * currentElement.effectFactor * parallaxEffectFactor;
             currentElementYOffset = offsetY / 100 * currentElement.effectFactor * parallaxEffectFactor;
-
             currentElement.y += dropDownSpeed;
 
+            /*
+             * Draw image, image element offset is per default only half of image offset to create parallax effect.
+             */
             ctx.drawImage(
                 img,
                 img.width / 2 - currentElementXOffset,
@@ -209,17 +287,20 @@
                 currentElement.height
             );
 
+            /*
+             * If elements are out of canvas, reset their y position to restart at top of canvas.
+             */
             if (currentElement.y + currentElementYOffset / 2 > canvas.height) {
                 currentElement.y = -currentElement.height - currentElementYOffset / 2;
             }
         }
 
-
-        iteration++;
         window.requestAnimationFrame(draw);
-
     }
 
+    /**
+     * Update parallax offset for current mouse position.
+     */
     function offsetUpdate(e) {
         let pos = getMousePos(canvas, e);
 
@@ -227,6 +308,9 @@
         offsetY = pos.y / 5;
     }
 
+    /**
+     * Get current mouse position.
+     */
     function getMousePos(canvas, evt) {
         let rect = canvas.getBoundingClientRect();
         return {
@@ -236,6 +320,7 @@
     }
 
     /**
+     * Code snippet from stack overflow to display fps counter.
      * https://stackoverflow.com/a/5111475
      */
     let filterStrength = 20,
@@ -246,6 +331,9 @@
         fpsOut.innerHTML = (1000 / frameTime).toFixed(1) + " fps";
     }, 1000);
 
+    /*
+     * Execute main init function.
+     */
     init();
 </script>
 </body>
